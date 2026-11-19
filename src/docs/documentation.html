@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIMS API Documentation</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1e293b;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 35px 8%;
+        }
+
+        header h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+        }
+
+        header p {
+            color: #cbd5e1;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .info code {
+            color: #2563eb;
+        }
+
+        h2 {
+            margin-top: 35px;
+            font-size: 21px;
+        }
+
+        .endpoint {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            padding: 16px 20px;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .method {
+            min-width: 75px;
+            text-align: center;
+            padding: 7px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .GET {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .POST {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .PUT {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .PATCH {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .DELETE {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .path {
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .description {
+            color: #64748b;
+            font-size: 14px;
+            margin-left: auto;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media(max-width: 600px) {
+            .endpoint {
+                align-items: flex-start;
+            }
+
+            .description {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Product Inventory Management System</h1>
+        <p>REST API Documentation</p>
+    </header>
+
+    <main class="container">
+
+        <section class="info">
+            <h2>API Information</h2>
+            <p><strong>API Name:</strong> PIMS API</p>
+            <p><strong>Version:</strong> 1.0.0</p>
+            <p><strong>Base URL:</strong> <code id="baseUrl"></code></p>
+            <p><strong>Content-Type:</strong> application/json</p>
+            <p><strong>Health Check:</strong> <a href="/health">/health</a></p>
+        </section>
+
+        <h2>Product Catalog</h2>
+        <p>Manage product catalog and their hierarchical relationships.</p>
+
+        <div id="productCatalogEndpoints"></div>
+
+        <h2>Products</h2>
+        <p>Manage products, product information, and catalog publishing.</p>
+
+        <div id="productEndpoints"></div>
+
+    </main>
+
+    <footer>
+        PIMS API Documentation &copy; ${new Date().getFullYear()}
+    </footer>
+
+    <script>
+        document.getElementById('baseUrl').textContent =
+            window.location.origin;
+
+        const catalog = [
+            ['GET', '/', 'Get all product catalog'],
+        ];
+
+        const products = [
+            ['POST', '/', 'Create a product'],
+            ['GET', '/', 'Get all products'],
+            ['GET', '/:id', 'Get a product by ID'],
+            ['PUT', '/:id', 'Update a product'],
+            ['DELETE', '/:id', 'Delete a product'],
+            ['PATCH', '/:id/publish', 'Publish a product to the catalog'],
+            ['PATCH', '/:id/unpublish', 'Unpublish a product from the catalog']
+        ];
+
+        function renderEndpoints(containerId, basePath, endpoints) {
+            const container = document.getElementById(containerId);
+
+            container.innerHTML = endpoints.map(([method, path, description]) => `
+                <div class="endpoint">
+                    <span class="method ${method}">${method}</span>
+                    <span class="path">${basePath}${path}</span>
+                    <span class="description">${description}</span>
+                </div>
+            `).join('');
+        }
+
+        renderEndpoints(
+            'productCatalogEndpoints',
+            '/products/catalogs',
+            catalog
+        );
+
+        renderEndpoints(
+            'productEndpoints',
+            '/products',
+            products
+        );
+    </script>
+
+</body>
+</html>
