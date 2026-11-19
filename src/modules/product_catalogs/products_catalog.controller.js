@@ -18,8 +18,6 @@ const getProductCatalog = async (req, res) => {
             search_value
         });
 
-        console.log("queries", queries)
-
         const products = await ProductMaster.find(queries)
             .sort({ 'catalog.published_at': -1 })
             .skip((Number(page) - 1) * Number(limit))

@@ -7,16 +7,16 @@ const { singleSorting } = require('../../helpers/sorting');
 const addNewProductItem = async (req,res) => {
     try{
         let newProduct = await ProductMaster.create(req.body)
-        res.status(201).json({
-            status: 201,
+        return res.status(201).json({
+            success: true,
             data: newProduct,
             message: "Successfully created."
 
         })
     }
     catch(err){
-        res.status(400).json({
-            status: 400,
+        return res.status(400).json({
+            success: false,
             message: "Failed to create product item",
             error: err.message
         })
@@ -80,8 +80,8 @@ const getProducts = async (req, res) => {
             ProductMaster.countDocuments(queries)
         ]);
 
-        res.status(200).json({
-            status: 200,
+        return res.status(200).json({
+            success: true,
             data: products,
             pagination: {
                 total,
@@ -97,8 +97,8 @@ const getProducts = async (req, res) => {
         })
     }
     catch(err){
-        res.status(500).json({
-            status: 500,
+        return res.status(500).json({
+            success: false,
             message: "Failed to retrieve products",
             error:err.message
         })
@@ -113,20 +113,20 @@ const getProductById = async (req, res) => {
 
         if(!member){
             return res.status(404).json({
-                status: 404,
+                success: false,
                 message: "Product not found"
             })
         }
 
-        res.status(200).json({
-            status: 200,
+        return res.status(200).json({
+            success: true,
             data: member,
             message: "Successfully fetched details"
         })
     }
     catch(err){
-        res.status(400).json({
-            status: 400,
+        return res.status(400).json({
+            success: false,
             message: "Invalid product ID",
             error: err.message
         })
@@ -143,7 +143,7 @@ const updateProduct = async (req, res) => {
         // Validate MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
-                status: 400,
+                success: false,
                 message: "Invalid product ID"
             });
         }
@@ -170,7 +170,7 @@ const updateProduct = async (req, res) => {
 
         if (Object.keys(updates).length === 0) {
             return res.status(400).json({
-                status: 400,
+                success: false,
                 message: "No valid fields provided for update"
             });
         }
@@ -183,12 +183,13 @@ const updateProduct = async (req, res) => {
 
         if(!product){
             return res.status(404).json({
+                success: false,
                 message: "Product not found"
             })
         }
         
-        res.status(200).json({
-            status: 200,
+        return res.status(200).json({
+            success: false,
             data: product,
             message: "Successfully updated"
         })
@@ -197,14 +198,14 @@ const updateProduct = async (req, res) => {
         // Handle duplicate SKU
         if (err.code === 11000) {
             return res.status(409).json({
-                status: 409,
+                success: false,
                 message: "SKU already exists",
                 error: err.keyValue
             });
         }
         
-        res.status(400).json({
-            status: 400,
+        return res.status(400).json({
+            success: false,
             message: "Failed to update product",
             error: err.message
         })
@@ -219,19 +220,19 @@ const deleteProduct = async (req, res) => {
 
         if(!member){
             return res.status(404).json({
-                status: 404,
+                success: false,
                 message: "Product not found"
             })
         }
 
-        res.status(200).json({
-            status: 200,
+        return res.status(200).json({
+            success: true,
             message: "Successfully deleted product"
         })
     }
     catch(err){
-        res.status(400).json({
-            status: 400,
+        return res.status(400).json({
+            success: false,
             message: "Failed to delete product",
             error: err.message
         })
