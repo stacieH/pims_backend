@@ -312,6 +312,7 @@ const softDeleteProduct = async (req, res) => {
         }
 
         product.is_deleted = true;
+        product.status = "INACTIVE";
 
         await product.save();
 
