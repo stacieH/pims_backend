@@ -1,29 +1,38 @@
 const {
     getProducts, 
     getProductById, 
-    deleteProduct, 
+    softDeleteProduct, 
     updateProduct,
-    addNewProductItem
+    addNewProductItem, 
+    publishProductAsCatalog, 
+    unpublishProductAsCatalog
 } = require('./products.controller')
 
 const routes = (app) => {
     // Product collection
-    app.route('/products')
+    app.route('/api/products')
         // get list
         .get(getProducts)
         // create
         .post(addNewProductItem)
         
     // Individual product
-    app.route('/products/:id')
+    app.route('/api/products/:id')
         // get specific product
         .get(getProductById)
         // updating specific product
-        .put(updateProduct)
+        // .put(updateProduct)
         // updating specific product
         .patch(updateProduct)
         // deleting specific product
-        .delete(deleteProduct)
+        .delete(softDeleteProduct)
+        // .delete(deleteProduct)
+
+    app.route('/api/products/:id/publish')
+        .patch(publishProductAsCatalog)
+    
+    app.route('/api/products/:id/unpublish')
+        .patch(unpublishProductAsCatalog)
 }
 
 module.exports={routes}

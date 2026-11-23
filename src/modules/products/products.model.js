@@ -13,7 +13,7 @@ const ProductSchema = new mongoose.Schema({
         required: [true, 'Product Name is missing'],
         trim: true
     },
-    category_id: {
+    category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'product_categories',
         default: null
@@ -28,7 +28,7 @@ const ProductSchema = new mongoose.Schema({
         trim: true,
         default: null
     },
-    image_urls:{
+    images:{
         type: [{
             url: {
                 type: String,

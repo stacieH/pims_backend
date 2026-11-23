@@ -7,16 +7,16 @@ const { singleSorting } = require('../../helpers/sorting');
 const addNewProductItem = async (req,res) => {
     try{
         let newProduct = await ProductMaster.create(req.body)
-        res.status(201).json({
-            status: 201,
+        return res.status(201).json({
+            success: true,
             data: newProduct,
             message: "Successfully created."
 
         })
     }
     catch(err){
-        res.status(400).json({
-            status: 400,
+        return res.status(400).json({
+            success: false,
             message: "Failed to create product item",
             error: err.message
         })
@@ -80,8 +80,8 @@ const getProducts = async (req, res) => {
             ProductMaster.countDocuments(queries)
         ]);
 
-        res.status(200).json({
-            status: 200,
+        return res.status(200).json({
+            success: true,
             data: products,
             pagination: {
                 total,
@@ -97,8 +97,8 @@ const getProducts = async (req, res) => {
         })
     }
     catch(err){
-        res.status(500).json({
-            status: 500,
+        return res.status(500).json({
+            success: false,
             message: "Failed to retrieve products",
             error:err.message
         })
@@ -113,20 +113,20 @@ const getProductById = async (req, res) => {
 
         if(!member){
             return res.status(404).json({
-                status: 404,
+                success: false,
                 message: "Product not found"
             })
         }
 
-        res.status(200).json({
-            status: 200,
+        return res.status(200).json({
+            success: true,
             data: member,
             message: "Successfully fetched details"
         })
     }
     catch(err){
-        res.status(400).json({
-            status: 400,
+        return res.status(400).json({
+            success: false,
             message: "Invalid product ID",
             error: err.message
         })
@@ -139,39 +139,11 @@ const updateProduct = async (req, res) => {
         const id = req.params.id
         const body = req.body
 
-
         // Validate MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
-                status: 400,
+                success: false,
                 message: "Invalid product ID"
-            });
-        }
-
-        // Allowed fields for updating
-        const allowedFields = [
-            'productName',
-            'sku',
-            'description',
-            'price',
-            'quantity',
-            'images',
-            'status'
-        ];
-
-        const updates = {};
-
-        // Only accept allowed fields
-        for (const field of allowedFields) {
-            if (body[field] !== undefined) {
-                updates[field] = body[field];
-            }
-        }
-
-        if (Object.keys(updates).length === 0) {
-            return res.status(400).json({
-                status: 400,
-                message: "No valid fields provided for update"
             });
         }
 
@@ -179,16 +151,18 @@ const updateProduct = async (req, res) => {
             new: true,
             runValidators: true
         }
-        const product = await ProductMaster.findByIdAndUpdate(id, { $set: updates }, options)
+        
+        const product = await ProductMaster.findByIdAndUpdate(id, body, options)
 
         if(!product){
             return res.status(404).json({
+                success: false,
                 message: "Product not found"
             })
         }
         
-        res.status(200).json({
-            status: 200,
+        return res.status(200).json({
+            success: true,
             data: product,
             message: "Successfully updated"
         })
@@ -197,14 +171,90 @@ const updateProduct = async (req, res) => {
         // Handle duplicate SKU
         if (err.code === 11000) {
             return res.status(409).json({
-                status: 409,
+                success: false,
                 message: "SKU already exists",
                 error: err.keyValue
             });
         }
         
-        res.status(400).json({
-            status: 400,
+        return res.status(400).json({
+            success: false,
+            message: "Failed to update product",
+            error: err.message
+        })
+    }
+}
+
+
+// Update product
+const updateProduct2 = async (req, res) => {
+    try{
+        const id = req.params.id
+        const body = req.body
+
+        // Validate MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid product ID"
+            });
+        }
+
+        // Allowed fields for updating
+        const allowedFields = [
+            'name',
+            'sku',
+            'description',
+            'price',
+            'quantity',
+            'images',
+            'status'
+        ];
+
+        const updates = handleFields({body, allowedFields})
+
+            if (Object.keys(updates).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "No valid fields provided for update"
+                });
+            }
+
+        const newBody = { $set: updates }
+
+
+        const options = {
+            new: true,
+            runValidators: true
+        }
+        
+        const product = await ProductMaster.findByIdAndUpdate(id, newBody, options)
+
+        if(!product){
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            })
+        }
+        
+        return res.status(200).json({
+            success: false,
+            data: product,
+            message: "Successfully updated"
+        })
+    }
+    catch(err){
+        // Handle duplicate SKU
+        if (err.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "SKU already exists",
+                error: err.keyValue
+            });
+        }
+        
+        return res.status(400).json({
+            success: false,
             message: "Failed to update product",
             error: err.message
         })
@@ -219,29 +269,167 @@ const deleteProduct = async (req, res) => {
 
         if(!member){
             return res.status(404).json({
-                status: 404,
+                success: false,
                 message: "Product not found"
             })
         }
 
-        res.status(200).json({
-            status: 200,
+        return res.status(200).json({
+            success: true,
             message: "Successfully deleted product"
         })
     }
     catch(err){
-        res.status(400).json({
-            status: 400,
+        return res.status(400).json({
+            success: false,
             message: "Failed to delete product",
             error: err.message
         })
     }
 }
 
+const softDeleteProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const product = await ProductMaster.findOne({
+            _id: id,
+            // tenantId: req.user.tenantId
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        if (product?.is_deleted) {
+            return res.status(400).json({
+                success: false,
+                message: 'Product is already deleted'
+            });
+        }
+
+        product.is_deleted = true;
+        product.status = "INACTIVE";
+
+        await product.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product deleted successfully',
+            data: product
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to delete product',
+            error: error.message
+        });
+    }
+};
+
+const publishProductAsCatalog = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const product = await ProductMaster.findOne({
+            _id: id,
+            // tenantId: req.user.tenantId
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        if (product.catalog?.is_published) {
+            return res.status(400).json({
+                success: false,
+                message: 'Product is already published'
+            });
+        }
+
+        product.catalog = {
+            ...product.catalog?.toObject?.(),
+            is_published: true,
+            published_at: new Date(),
+            unpublished_at: null
+        };
+
+        await product.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product published successfully',
+            data: product
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to publish product',
+            error: error.message
+        });
+    }
+};
+
+const unpublishProductAsCatalog = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const product = await ProductMaster.findOne({
+            _id: id,
+            // tenantId: req.user.tenantId
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        if (!product.catalog?.is_published) {
+            return res.status(400).json({
+                success: false,
+                message: 'Product is already unpublished'
+            });
+        }
+
+        product.catalog.is_published = false;
+        product.catalog.unpublished_at = new Date();
+
+        await product.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product unpublished successfully',
+            data: product
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to unpublish product',
+            error: error.message
+        });
+    }
+};
+
+
 module.exports = {
     getProducts, 
     getProductById, 
-    deleteProduct, 
+    addNewProductItem, 
     updateProduct,
-    addNewProductItem
+    updateProduct2,
+    deleteProduct, 
+    softDeleteProduct,
+    publishProductAsCatalog, 
+    unpublishProductAsCatalog
 }
