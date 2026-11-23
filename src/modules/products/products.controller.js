@@ -139,6 +139,58 @@ const updateProduct = async (req, res) => {
         const id = req.params.id
         const body = req.body
 
+        // Validate MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid product ID"
+            });
+        }
+
+        const options = {
+            new: true,
+            runValidators: true
+        }
+        
+        const product = await ProductMaster.findByIdAndUpdate(id, body, options)
+
+        if(!product){
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            })
+        }
+        
+        return res.status(200).json({
+            success: true,
+            data: product,
+            message: "Successfully updated"
+        })
+    }
+    catch(err){
+        // Handle duplicate SKU
+        if (err.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "SKU already exists",
+                error: err.keyValue
+            });
+        }
+        
+        return res.status(400).json({
+            success: false,
+            message: "Failed to update product",
+            error: err.message
+        })
+    }
+}
+
+
+// Update product
+const updateProduct2 = async (req, res) => {
+    try{
+        const id = req.params.id
+        const body = req.body
 
         // Validate MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -150,7 +202,7 @@ const updateProduct = async (req, res) => {
 
         // Allowed fields for updating
         const allowedFields = [
-            'productName',
+            'name',
             'sku',
             'description',
             'price',
@@ -159,27 +211,24 @@ const updateProduct = async (req, res) => {
             'status'
         ];
 
-        const updates = {};
+        const updates = handleFields({body, allowedFields})
 
-        // Only accept allowed fields
-        for (const field of allowedFields) {
-            if (body[field] !== undefined) {
-                updates[field] = body[field];
+            if (Object.keys(updates).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "No valid fields provided for update"
+                });
             }
-        }
 
-        if (Object.keys(updates).length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "No valid fields provided for update"
-            });
-        }
+        const newBody = { $set: updates }
+
 
         const options = {
             new: true,
             runValidators: true
         }
-        const product = await ProductMaster.findByIdAndUpdate(id, { $set: updates }, options)
+        
+        const product = await ProductMaster.findByIdAndUpdate(id, newBody, options)
 
         if(!product){
             return res.status(404).json({
@@ -239,10 +288,147 @@ const deleteProduct = async (req, res) => {
     }
 }
 
+const softDeleteProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const product = await ProductMaster.findOne({
+            _id: id,
+            // tenantId: req.user.tenantId
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        if (product?.is_deleted) {
+            return res.status(400).json({
+                success: false,
+                message: 'Product is already deleted'
+            });
+        }
+
+        product.is_deleted = true;
+
+        await product.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product deleted successfully',
+            data: product
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to delete product',
+            error: error.message
+        });
+    }
+};
+
+const publishProductAsCatalog = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const product = await ProductMaster.findOne({
+            _id: id,
+            // tenantId: req.user.tenantId
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        if (product.catalog?.is_published) {
+            return res.status(400).json({
+                success: false,
+                message: 'Product is already published'
+            });
+        }
+
+        product.catalog = {
+            ...product.catalog?.toObject?.(),
+            is_published: true,
+            published_at: new Date(),
+            unpublished_at: null
+        };
+
+        await product.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product published successfully',
+            data: product
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to publish product',
+            error: error.message
+        });
+    }
+};
+
+const unpublishProductAsCatalog = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const product = await ProductMaster.findOne({
+            _id: id,
+            // tenantId: req.user.tenantId
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        if (!product.catalog?.is_published) {
+            return res.status(400).json({
+                success: false,
+                message: 'Product is already unpublished'
+            });
+        }
+
+        product.catalog.is_published = false;
+        product.catalog.unpublished_at = new Date();
+
+        await product.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product unpublished successfully',
+            data: product
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to unpublish product',
+            error: error.message
+        });
+    }
+};
+
+
 module.exports = {
     getProducts, 
     getProductById, 
-    deleteProduct, 
+    addNewProductItem, 
     updateProduct,
-    addNewProductItem
+    updateProduct2,
+    deleteProduct, 
+    softDeleteProduct,
+    publishProductAsCatalog, 
+    unpublishProductAsCatalog
 }

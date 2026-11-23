@@ -61,12 +61,21 @@
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 9px;
-            padding: 16px 20px;
             margin: 12px 0;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            padding: 16px 20px;
             display: flex;
             align-items: center;
             gap: 15px;
             flex-wrap: wrap;
+            cursor: pointer;
+        }
+
+        .endpoint-header:hover {
+            background: #f8fafc;
         }
 
         .method {
@@ -115,6 +124,78 @@
             margin-left: auto;
         }
 
+        .arrow {
+            margin-left: 10px;
+            color: #64748b;
+            transition: transform .2s;
+        }
+
+        .endpoint.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .endpoint-content {
+            display: none;
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .endpoint.open .endpoint-content {
+            display: block;
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 20px 0 8px;
+            color: #475569;
+        }
+
+        .section-label:first-child {
+            margin-top: 0;
+        }
+
+        pre {
+            background: #111827;
+            color: #e5e7eb;
+            padding: 18px;
+            border-radius: 7px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre;
+        }
+
+        .copy-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #cbd5e1;
+        }
+
+        .status {
+            display: inline-block;
+            background: #dcfce7;
+            color: #15803d;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .endpoint-description {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
         footer {
             text-align: center;
             padding: 30px;
@@ -123,7 +204,7 @@
         }
 
         @media(max-width: 600px) {
-            .endpoint {
+            .endpoint-header {
                 align-items: flex-start;
             }
 
@@ -137,80 +218,591 @@
 
 <body>
 
-    <header>
-        <h1>Product Inventory Management System</h1>
-        <p>REST API Documentation</p>
-    </header>
+<header>
+    <h1>Product Inventory Management System</h1>
+    <p>REST API Documentation</p>
+</header>
 
-    <main class="container">
+<main class="container">
 
-        <section class="info">
-            <h2>API Information</h2>
-            <p><strong>API Name:</strong> PIMS API</p>
-            <p><strong>Version:</strong> 1.0.0</p>
-            <p><strong>Base URL:</strong> <code id="baseUrl"></code></p>
-            <p><strong>Content-Type:</strong> application/json</p>
-            <p><strong>Health Check:</strong> <a href="/health">/health</a></p>
-        </section>
+    <section class="info">
+        <h2>API Information</h2>
+        <p><strong>API Name:</strong> PIMS API</p>
+        <p><strong>Version:</strong> 1.0.0</p>
+        <p><strong>Base URL:</strong> <code id="baseUrl"></code></p>
+        <p><strong>Content-Type:</strong> application/json</p>
+        <p><strong>Health Check:</strong> <a href="/health">/health</a></p>
+    </section>
 
-        <h2>Product Catalog</h2>
-        <p>Manage product catalog and their hierarchical relationships.</p>
+    <h2>Product Catalog</h2>
+    <p>Retrieve published products available in the product catalog.</p>
 
-        <div id="productCatalogEndpoints"></div>
+    <div id="productCatalogEndpoints"></div>
 
-        <h2>Products</h2>
-        <p>Manage products, product information, and catalog publishing.</p>
+    <h2>Products</h2>
+    <p>Manage products, product information, and catalog publishing.</p>
 
-        <div id="productEndpoints"></div>
+    <div id="productEndpoints"></div>
 
-    </main>
+</main>
 
-    <footer>
-        PIMS API Documentation &copy; ${new Date().getFullYear()}
-    </footer>
+<footer>
+    PIMS API Documentation &copy; <span id="year"></span>
+</footer>
 
-    <script>
-        document.getElementById('baseUrl').textContent =
-            window.location.origin;
+<script>
 
-        const catalog = [
-            ['GET', '/', 'Get all product catalog'],
-        ];
+    document.getElementById('baseUrl').textContent =
+        window.location.origin;
 
-        const products = [
-            ['POST', '/', 'Create a product'],
-            ['GET', '/', 'Get all products'],
-            ['GET', '/:id', 'Get a product by ID'],
-            ['PUT', '/:id', 'Update a product'],
-            ['DELETE', '/:id', 'Delete a product'],
-            ['PATCH', '/:id/publish', 'Publish a product to the catalog'],
-            ['PATCH', '/:id/unpublish', 'Unpublish a product from the catalog']
-        ];
+    document.getElementById('year').textContent =
+        new Date().getFullYear();
 
-        function renderEndpoints(containerId, basePath, endpoints) {
-            const container = document.getElementById(containerId);
+    const catalog = [
+        {
+            method: 'GET',
+            path: '/',
+            description: 'Get all published products in the catalog',
+            query: `?page=1&limit=10&search_keys=sku,name&search_value=Chicken`,
+            response: {
+                "success": true,
+                "data": [
+                    {
+                    "catalog": {
+                        "is_published": true,
+                        "published_at": "2026-11-19T10:47:14.466Z",
+                        "unpublished_at": null
+                    },
+                    "_id": "6afed36ea695c1683411e04e",
+                    "sku": "PR-0002",
+                    "name": "Chicken Vesuvio",
+                    "category": null,
+                    "short_description": null,
+                    "description": "TEST",
+                    "images": [
+                        {
+                        "url": "https://th.bing.com/th/id/OSK.007a0dfa5139f9a3d01d7878696874db?w=200&h=200&c=7&rs=1&qlt=90&o=6&pid=acf-sdl",
+                        "alt": "chicken-vesuvio",
+                        "is_primary": true,
+                        "_id": "6afed36ea695c1683411e04f",
+                        "uploaded_at": "2026-11-19T10:46:06.658Z"
+                        }
+                    ],
+                    "price": 0,
+                    "barcode": null,
+                    "is_deleted": false,
+                    "status": "ACTIVE",
+                    "ingredients": [],
+                    "cooking_instructions": [],
+                    "createdAt": "2026-11-19T10:46:06.754Z",
+                    "updatedAt": "2026-11-19T10:47:14.468Z"
+                    }
+                ],
+                "pagination": {
+                    "total": 1,
+                    "page": 1,
+                    "limit": 10,
+                    "totalPages": 1
+                }
+            }
+        }
+    ];
 
-            container.innerHTML = endpoints.map(([method, path, description]) => `
+    const products = [
+        {
+            method: 'POST',
+            path: '/',
+            description: 'Create a new product',
+            payload: {
+                "name": "Chicken Vesuvio",
+                "sku": "PR-0002",
+                "description": "TEST",
+                "price": 0,
+                "images": [
+                    {
+                        "url": "https://th.bing.com/th/id/OSK.007a0dfa5139f9a3d01d7878696874db?w=200&h=200&c=7&rs=1&qlt=90&o=6&pid=acf-sdl",
+                        "is_primary": true,
+                        "alt": "chicken-vesuvio"
+                    }
+                ],
+                "status": "ACTIVE"
+            },
+            response: {
+                success: true,
+                message: 'Product created successfully',
+                data: {
+                "success": true,
+                "data": {
+                    "catalog": {
+                        "is_published": false,
+                        "published_at": null,
+                        "unpublished_at": null
+                    },
+                    "_id": "6afed36ea695c1683411e04e",
+                    "sku": "PR-0002",
+                    "name": "Chicken Vesuvio",
+                    "category": null,
+                    "short_description": null,
+                    "description": "TEST",
+                    "images": [
+                        {
+                        "url": "https://th.bing.com/th/id/OSK.007a0dfa5139f9a3d01d7878696874db?w=200&h=200&c=7&rs=1&qlt=90&o=6&pid=acf-sdl",
+                        "alt": "chicken-vesuvio",
+                        "is_primary": true,
+                        "_id": "6afed36ea695c1683411e04f",
+                        "uploaded_at": "2026-11-19T10:46:06.658Z"
+                        }
+                    ],
+                    "price": 0,
+                    "barcode": null,
+                    "is_deleted": false,
+                    "status": "ACTIVE",
+                    "ingredients": [],
+                    "cooking_instructions": [],
+                    "createdAt": "2026-11-19T10:46:06.754Z",
+                    "updatedAt": null
+                    }
+                }
+            },
+            error: {
+                "success": false,
+                "message": "Failed to create product item",
+                "error": "E11000 duplicate key error collection: development.products index: sku_1 dup key: { sku: \"PR-0002\" }"
+            }
+        },
+
+        {
+            method: 'GET',
+            path: '/',
+            description: 'Get all products',
+
+            query: '?page=1&limit=10&search_value=chicken&search_keys=name,sku&sort_by=name&sort_order=asc',
+
+            response: {
+                "success": true,
+                "data": [
+                    {
+                        "catalog": {
+                            "is_published": true,
+                            "published_at": "2026-11-19T10:47:14.466Z",
+                            "unpublished_at": null
+                        },
+                        "category": null,
+                        "images": null,
+                        "_id": "6afed36ea695c1683411e04e",
+                        "sku": "PR-0002",
+                        "name": "Chicken Vesuvio",
+                        "category_id": null,
+                        "short_description": null,
+                        "description": "TEST",
+                        "image_urls": [
+                            {
+                                "url": "https://th.bing.com/th/id/OSK.007a0dfa5139f9a3d01d7878696874db?w=200&h=200&c=7&rs=1&qlt=90&o=6&pid=acf-sdl",
+                                "alt": "chicken-vesuvio",
+                                "is_primary": true,
+                                "_id": "6afed36ea695c1683411e04f",
+                                "uploaded_at": "2026-11-19T10:46:06.658Z"
+                            }
+                        ],
+                        "price": 0,
+                        "barcode": null,
+                        "is_deleted": false,
+                        "status": "ACTIVE",
+                        "ingredients": [],
+                        "cooking_instructions": [],
+                        "createdAt": "2026-11-19T10:46:06.754Z",
+                        "updatedAt": "2026-11-19T10:47:14.468Z"
+                    }
+                ],
+                "pagination": {
+                    "total": 1,
+                    "page": 1,
+                    "limit": 10,
+                    "totalPages": 1
+                },
+                "sorting": {
+                    "sort_by": "name",
+                    "sort_order": "asc"
+                },
+                "message": "Successfully fetched list."
+            }
+        },
+
+        {
+            method: 'GET',
+            path: '/:id',
+            description: 'Get a product by ID',
+
+            response: {
+                "success": true,
+                "data": {
+                    "catalog": {
+                        "is_published": true,
+                        "published_at": "2026-11-19T10:47:14.466Z",
+                        "unpublished_at": null
+                    },
+                    "category": null,
+                    "images": null,
+                    "_id": "6afed36ea695c1683411e04e",
+                    "sku": "PR-0002",
+                    "name": "Chicken Vesuvio",
+                    "category_id": null,
+                    "short_description": null,
+                    "description": "TEST",
+                    "image_urls": [
+                        {
+                            "url": "https://th.bing.com/th/id/OSK.007a0dfa5139f9a3d01d7878696874db?w=200&h=200&c=7&rs=1&qlt=90&o=6&pid=acf-sdl",
+                            "alt": "chicken-vesuvio",
+                            "is_primary": true,
+                            "_id": "6afed36ea695c1683411e04f",
+                            "uploaded_at": "2026-11-19T10:46:06.658Z"
+                        }
+                    ],
+                    "price": 0,
+                    "barcode": null,
+                    "is_deleted": false,
+                    "status": "ACTIVE",
+                    "ingredients": [],
+                    "cooking_instructions": [],
+                    "createdAt": "2026-11-19T10:46:06.754Z",
+                    "updatedAt": "2026-11-19T10:47:14.468Z"
+                },
+                "message": "Successfully fetched details"
+            },
+
+            error: {
+                "success": false,
+                "message": "Invalid product ID",
+                "error": "Cast to ObjectId failed for value \"6afed36ea695c1683411e04e2\" (type string) at path \"_id\" for model \"products\""
+            }
+        },
+
+        {
+            method: 'PATCH',
+            path: '/:id',
+            description: 'Update an existing product',
+
+            payload: {
+                "description": "Sample Product for Testing"
+            },
+
+            response: {
+                "success": true,
+                "data": {
+                    "catalog": {
+                    "is_published": true,
+                    "published_at": "2026-11-19T10:47:14.466Z",
+                    "unpublished_at": null
+                    },
+                    "category": null,
+                    "images": null,
+                    "_id": "6afed36ea695c1683411e04e",
+                    "sku": "PR-0002",
+                    "name": "Chicken Vesuvio",
+                    "category_id": null,
+                    "short_description": null,
+                    "description": "Sample Product for Testing",
+                    "image_urls": [
+                    {
+                        "url": "https://th.bing.com/th/id/OSK.007a0dfa5139f9a3d01d7878696874db?w=200&h=200&c=7&rs=1&qlt=90&o=6&pid=acf-sdl",
+                        "alt": "chicken-vesuvio",
+                        "is_primary": true,
+                        "_id": "6afed36ea695c1683411e04f",
+                        "uploaded_at": "2026-11-19T10:46:06.658Z"
+                    }
+                    ],
+                    "price": 0,
+                    "barcode": null,
+                    "is_deleted": false,
+                    "status": "ACTIVE",
+                    "ingredients": [],
+                    "cooking_instructions": [],
+                    "createdAt": "2026-11-19T10:46:06.754Z",
+                    "updatedAt": "2026-11-23T09:05:55.950Z"
+                },
+                "message": "Successfully updated"
+            }
+        },
+
+        {
+            method: 'DELETE',
+            path: '/:id',
+            description: 'Delete a product',
+
+            response: {
+                "success": true,
+                "message": "Product deleted successfully",
+                "data": {
+                    "catalog": {
+                        "is_published": true,
+                        "published_at": "2026-11-19T08:50:55.325Z",
+                        "unpublished_at": null
+                    },
+                    "category": null,
+                    "images": null,
+                    "_id": "6afeb1139e352e28fdf53624",
+                    "sku": "TS-0002",
+                    "name": "Test Sample",
+                    "category_id": null,
+                    "short_description": null,
+                    "description": "TEST",
+                    "image_urls": null,
+                    "price": 500,
+                    "barcode": null,
+                    "is_deleted": true,
+                    "status": "ACTIVE",
+                    "ingredients": [],
+                    "cooking_instructions": [],
+                    "createdAt": "2026-11-19T08:19:31.308Z",
+                    "updatedAt": "2026-11-23T09:14:40.528Z"
+                }
+            },
+
+            error: {
+                "success": false,
+                "message": "Product is already deleted"
+            }
+        },
+
+        {
+            method: 'PATCH',
+            path: '/:id/publish',
+            description: 'Publish a product to the catalog',
+            response: {
+                "success": true,
+                "message": "Product unpublished successfully",
+                "data": {
+                    "catalog": {
+                        "is_published": false,
+                        "published_at": "2026-11-19T10:47:14.466Z",
+                        "unpublished_at": "2026-11-23T09:16:05.324Z"
+                    },
+                    "category": null,
+                    "images": null,
+                    "_id": "6afed36ea695c1683411e04e",
+                    "sku": "PR-0002",
+                    "name": "Chicken Vesuvio",
+                    "category_id": null,
+                    "short_description": null,
+                    "description": "Sample Product for Testing",
+                    "image_urls": [
+                        {
+                            "url": "https://th.bing.com/th/id/OSK.007a0dfa5139f9a3d01d7878696874db?w=200&h=200&c=7&rs=1&qlt=90&o=6&pid=acf-sdl",
+                            "alt": "chicken-vesuvio",
+                            "is_primary": true,
+                            "_id": "6afed36ea695c1683411e04f",
+                            "uploaded_at": "2026-11-19T10:46:06.658Z"
+                        }
+                    ],
+                    "price": 0,
+                    "barcode": null,
+                    "is_deleted": false,
+                    "status": "ACTIVE",
+                    "ingredients": [],
+                    "cooking_instructions": [],
+                    "createdAt": "2026-11-19T10:46:06.754Z",
+                    "updatedAt": "2026-11-23T09:16:05.324Z"
+                }
+            }
+        },
+
+        {
+            method: 'PATCH',
+            path: '/:id/unpublish',
+            description: 'Unpublish a product from the catalog',
+            response: {
+                "success": true,
+                "message": "Product published successfully",
+                "data": {
+                    "catalog": {
+                        "is_published": true,
+                        "published_at": "2026-11-23T09:17:35.695Z",
+                        "unpublished_at": null
+                    },
+                    "category": null,
+                    "images": null,
+                    "_id": "6afed36ea695c1683411e04e",
+                    "sku": "PR-0002",
+                    "name": "Chicken Vesuvio",
+                    "category_id": null,
+                    "short_description": null,
+                    "description": "Sample Product for Testing",
+                    "image_urls": [
+                        {
+                            "url": "https://th.bing.com/th/id/OSK.007a0dfa5139f9a3d01d7878696874db?w=200&h=200&c=7&rs=1&qlt=90&o=6&pid=acf-sdl",
+                            "alt": "chicken-vesuvio",
+                            "is_primary": true,
+                            "_id": "6afed36ea695c1683411e04f",
+                            "uploaded_at": "2026-11-19T10:46:06.658Z"
+                        }
+                    ],
+                    "price": 0,
+                    "barcode": null,
+                    "is_deleted": false,
+                    "status": "ACTIVE",
+                    "ingredients": [],
+                    "cooking_instructions": [],
+                    "createdAt": "2026-11-19T10:46:06.754Z",
+                    "updatedAt": "2026-11-23T09:17:35.697Z"
+                }
+            }
+        }
+    ];
+
+    function formatJSON(data) {
+        return JSON.stringify(data, null, 4);
+    }
+
+    function renderEndpoints(containerId, basePath, endpoints) {
+
+        const container = document.getElementById(containerId);
+
+        container.innerHTML = endpoints.map((endpoint, index) => {
+
+            const requestUrl =
+                basePath + endpoint.path +
+                (endpoint.query || '');
+
+            const payload = endpoint.payload !== undefined
+                ? endpoint.payload
+                : null;
+
+            return `
                 <div class="endpoint">
-                    <span class="method ${method}">${method}</span>
-                    <span class="path">${basePath}${path}</span>
-                    <span class="description">${description}</span>
+
+                    <div class="endpoint-header">
+                        <span class="method ${endpoint.method}">
+                            ${endpoint.method}
+                        </span>
+
+                        <span class="path">
+                            ${basePath}${endpoint.path==="/"?"":endpoint.path}
+                        </span>
+
+                        <span class="description">
+                            ${endpoint.description}
+                        </span>
+
+                        <span class="arrow">▼</span>
+                    </div>
+
+                    <div class="endpoint-content">
+
+                        <p class="endpoint-description">
+                            ${endpoint.description}
+                        </p>
+
+                        <div class="section-label">Request URL</div>
+                        <pre>${requestUrl}</pre>
+
+                        ${endpoint.query ? `
+                            <div class="section-label">
+                                Query Parameters
+                            </div>
+                            <pre>${endpoint.query}</pre>
+                        ` : ''}
+
+                        ${payload !== null ? `
+                            <div class="section-label">
+                                Request Body (application/json)
+                            </div>
+
+                            <button class="copy-btn" data-copy="payload-${containerId}-${index}">
+                                Copy Payload
+                            </button>
+
+                            <pre id="payload-${containerId}-${index}">${formatJSON(payload)}</pre>
+                        ` : ''}
+
+                        ${endpoint.response ? `
+                            <div class="section-label">
+                                <span class="status">200 / 201 SUCCESS</span>
+                                Response Example
+                            </div>
+
+                            <button class="copy-btn" data-copy="response-${containerId}-${index}">
+                                Copy Response
+                            </button>
+
+                            <pre id="response-${containerId}-${index}">${formatJSON(endpoint.response)}</pre>
+                        ` : ''}
+
+                        ${endpoint.error ? `
+                            <div class="section-label">
+                                <span class="status" style="background:#fee2e2;color:#dc2626">
+                                    ERROR
+                                </span>
+                                Error Response Example
+                            </div>
+
+                            <pre>${formatJSON(endpoint.error)}</pre>
+                        ` : ''}
+
+                        <div class="section-label">cURL Example</div>
+
+                        <button class="copy-btn" data-copy="curl-${containerId}-${index}">
+                            Copy cURL
+                        </button>
+
+                        <pre id="curl-${containerId}-${index}">${endpoint.method} ${requestUrl}</pre>
+
+                    </div>
                 </div>
-            `).join('');
+            `;
+
+        }).join('');
+
+        container.querySelectorAll('.endpoint-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.parentElement.classList.toggle('open');
+            });
+        });
+
+    }
+
+    document.addEventListener('click', async event => {
+
+        const button = event.target.closest('.copy-btn');
+
+        if (!button) return;
+
+        const element = document.getElementById(button.dataset.copy);
+
+        if (!element) return;
+
+        try {
+            await navigator.clipboard.writeText(element.textContent);
+
+            button.textContent = 'Copied!';
+
+            setTimeout(() => {
+                button.textContent = button.dataset.copy.startsWith('payload')
+                    ? 'Copy Payload'
+                    : button.dataset.copy.startsWith('response')
+                        ? 'Copy Response'
+                        : 'Copy cURL';
+            }, 1500);
+
+        } catch (error) {
+            console.error('Copy failed:', error);
+            button.textContent = 'Copy failed';
         }
 
-        renderEndpoints(
-            'productCatalogEndpoints',
-            '/products/catalogs',
-            catalog
-        );
+    });
 
-        renderEndpoints(
-            'productEndpoints',
-            '/products',
-            products
-        );
-    </script>
+    renderEndpoints(
+        'productCatalogEndpoints',
+        '/products/catalogs',
+        catalog
+    );
+
+    renderEndpoints(
+        'productEndpoints',
+        '/products',
+        products
+    );
+
+</script>
 
 </body>
 </html>

@@ -29,17 +29,14 @@ app.get('/', (_, res) => {
 })
 
 // API Documentation
-app.get('/documentation', (_, res) => {
+app.get('/api/documentation', (_, res) => {
      const filePath = path.join(__dirname, 'docs', 'documentation.html');
 
     console.log('Documentation path:', filePath);
     console.log('File exists:', fs.existsSync(filePath));
 
     if (!fs.existsSync(filePath)) {
-        return res.status(404).send(`
-            <h1>Documentation Not Found</h1>
-            <p>Expected file: ${filePath}</p>
-        `);
+        return res.status(404).send(`<h1>Documentation Not Found</h1> <p>Expected file: ${filePath}</p>`);
     }
 
     res.sendFile(filePath, (error) => {
