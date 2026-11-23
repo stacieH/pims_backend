@@ -2,6 +2,7 @@ const {
     getProducts, 
     getProductById, 
     softDeleteProduct, 
+    deleteProduct,
     updateProduct,
     addNewProductItem, 
     publishProductAsCatalog, 
@@ -26,7 +27,9 @@ const routes = (app) => {
         .patch(updateProduct)
         // deleting specific product
         .delete(softDeleteProduct)
-        // .delete(deleteProduct)
+
+    app.route('/api/products/:id/hard-delete')
+        .delete(deleteProduct)
 
     app.route('/api/products/:id/publish')
         .patch(publishProductAsCatalog)
